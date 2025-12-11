@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, NavLink, useNavigate } from "react-router-dom"; // useLocation removed (not needed)
 import { useAuth } from "@/hooks/useAuth";
 import { 
   LayoutDashboard, 
@@ -10,19 +10,18 @@ import {
   Menu, 
   Store,
   ChefHat,
-  BarChart3 
+  BarChart3,
+  Users // Added Users icon for Team
 } from "lucide-react";
 
 // UI Components
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 
 export default function Manage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const handleLogout = () => {
@@ -32,12 +31,12 @@ export default function Manage() {
 
   // Navigation Items Configuration
   const navItems = [
-    { name: "Dashboard", href: "/manage", icon: LayoutDashboard, end: true },
+    { name: "Dashboard", href: "/manage", icon: LayoutDashboard, end: true }, // end: true prevents partial matching
     { name: "Analytics", href: "/manage/stats", icon: BarChart3 },
     { name: "Orders", href: "/manage/orders", icon: Store },
     { name: "Menu Management", href: "/manage/menu", icon: UtensilsCrossed },
     { name: "QR Codes", href: "/manage/qr", icon: QrCode },
-    { name: "Team", href: "/manage/team", icon: BarChart3 },
+    { name: "Team", href: "/manage/team", icon: Users }, // Changed icon to Users
     { name: "Settings", href: "/manage/settings", icon: Settings },
   ];
 
@@ -67,15 +66,11 @@ export default function Manage() {
 
       {/* Navigation Links */}
       <div className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-           const isActive = item.end 
-             ? location.pathname === item.href 
-             : location.pathname.startsWith(item.href);
-             
-           return (
+        {navItems.map((item) => (
             <NavLink
               key={item.href}
               to={item.href}
+              end={item.end} // <--- THIS FIXES THE ISSUE
               onClick={() => setIsMobileOpen(false)}
               className={({ isActive }) => `
                 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all
@@ -87,8 +82,7 @@ export default function Manage() {
               <item.icon className="h-5 w-5" />
               {item.name}
             </NavLink>
-           );
-        })}
+        ))}
       </div>
 
       {/* Footer / Logout */}

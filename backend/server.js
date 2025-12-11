@@ -19,7 +19,10 @@ const startServer = async () => {
     await connectDB();
     
     // --- 2. Middlewares ---
-    app.use(cors());
+    app.use(cors({
+  origin: "*", // Allow any device (Phone IP) to connect
+  credentials: true
+}));
     // Increased limit for initial large payload support, though we prefer cloud storage now
     app.use(express.json({ limit: '10mb' })); 
     app.use(express.urlencoded({ limit: '10mb', extended: true }));

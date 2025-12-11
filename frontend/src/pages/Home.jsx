@@ -45,18 +45,34 @@ function Home() {
           </Link>
           
           {/* Desktop Nav */}
-          <div className="hidden items-center gap-6 md:flex">
-            <a href="#features" className="text-sm font-medium text-slate-600 hover:text-orange-600">Features</a>
-            <a href="#about" className="text-sm font-medium text-slate-600 hover:text-orange-600">About</a>
-            <Link to="/login" className="text-sm font-medium text-slate-900 hover:text-orange-600">Log In</Link>
-            <div className="h-6 w-px bg-slate-200"></div>
-            <Link 
-              to="/signup" 
-              className="rounded-full bg-orange-600 px-6 py-2.5 text-sm font-bold text-white transition-all hover:bg-orange-700 hover:shadow-lg hover:shadow-orange-200"
-            >
-              Create Account
-            </Link>
-          </div>
+<div className="hidden items-center gap-6 md:flex">
+  <a href="#features" className="text-sm font-medium text-slate-600 transition-colors hover:text-orange-600">
+    Features
+  </a>
+  <a href="#about" className="text-sm font-medium text-slate-600 transition-colors hover:text-orange-600">
+    About
+  </a>
+
+  {/* Auth Group */}
+  <div className="flex items-center gap-4 pl-4 border-l border-slate-200">
+    <Link 
+      to="/login" 
+      className="text-sm font-bold text-orange-600 hover:text-slate-700 transition-colors"
+    >
+      Log In
+    </Link>
+    <Link 
+      to="/signup" 
+      className="group relative flex items-center justify-center gap-2 rounded-full bg-slate-900 px-6 py-2.5 text-sm font-bold text-white transition-all hover:bg-orange-600 hover:shadow-lg hover:shadow-orange-200"
+    >
+      <span>Get Started</span>
+      {/* Tiny arrow animation on hover */}
+      <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+      </svg>
+    </Link>
+  </div>
+</div>
 
           {/* Mobile Toggle */}
           <button className="md:hidden" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>

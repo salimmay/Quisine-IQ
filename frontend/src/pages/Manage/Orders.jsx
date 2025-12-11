@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useManageOrders } from "@/hooks/useManageOrders";
-import { printOrderTicket } from "@/lib/printUtils"; // Import the helper from above (or paste it at bottom)
 import { 
-  CheckCircle2, XCircle, ChefHat, Trash2, ArrowRight, Utensils, Printer 
+  CheckCircle2, XCircle, ChefHat, Trash2, ArrowRight, Utensils, Printer, Loader2 
 } from "lucide-react";
 
 // Shadcn UI
@@ -19,10 +18,22 @@ import QuisineLoader from "@/components/ui/QuisineLoader";
 export default function ManageOrders() {
   const { orders, isLoading, updateStatus, deleteOrder } = useManageOrders();
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Handler to open modal
+  const handleOpenDetails = (order) => {
+    setSelectedOrder(order);
+    setIsModalOpen(true);
+  };
+
+  // Handler to close modal
+  const handleCloseDetails = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setSelectedOrder(null), 300); // Clear data after animation
+  };
 
   if (isLoading) return <QuisineLoader text="Loading Orders..." />;
 
-  // Group orders by status
   const pending = orders.filter(o => o.status === 'pending');
   const preparing = orders.filter(o => o.status === 'preparing');
   const ready = orders.filter(o => o.status === 'ready' || o.status === 'completed');
@@ -57,43 +68,57 @@ export default function ManageOrders() {
         <div className="flex-1 bg-slate-50/50 mt-4 rounded-xl border border-slate-200 p-4 overflow-hidden">
             <ScrollArea className="h-full pr-4">
                 <TabsContent value="pending" className="mt-0 space-y-4">
-                    <OrderGrid orders={pending} type="pending" onSelect={setSelectedOrder} />
+                    <OrderGrid orders={pending} type="pending" onSelect={handleOpenDetails} />
                 </TabsContent>
                 <TabsContent value="preparing" className="mt-0 space-y-4">
-                    <OrderGrid orders={preparing} type="preparing" onSelect={setSelectedOrder} />
+                    <OrderGrid orders={preparing} type="preparing" onSelect={handleOpenDetails} />
                 </TabsContent>
                 <TabsContent value="ready" className="mt-0 space-y-4">
-                    <OrderGrid orders={ready} type="ready" onSelect={setSelectedOrder} />
+                    <OrderGrid orders={ready} type="ready" onSelect={handleOpenDetails} />
                 </TabsContent>
             </ScrollArea>
         </div>
       </Tabs>
 
-      {/* --- Order Detail Dialog --- */}
-      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="sm:max-w-[500px]">
-            {selectedOrder && (
-                <>
+      {/* Separated Modal Component for better performance */}
+      <OrderDetailsModal 
+        isOpen={isModalOpen}
+        onClose={handleCloseDetails}
+        order={selectedOrder}
+        updateStatus={updateStatus}
+        deleteOrder={deleteOrder}
+      />
+    </div>
+  );
+}
+
+// --- SUB COMPONENTS ---
+
+function OrderDetailsModal({ isOpen, onClose, order, updateStatus, deleteOrder }) {
+    if (!order) return null;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                     <div className="flex items-center justify-between">
-                        <DialogTitle className="text-2xl">Table {selectedOrder.table}</DialogTitle>
-                        <Badge variant="secondary" className="text-md">#{selectedOrder._id.slice(-4).toUpperCase()}</Badge>
+                        <DialogTitle className="text-2xl">Table {order.table}</DialogTitle>
+                        <Badge variant="secondary" className="text-md">#{order._id.slice(-4).toUpperCase()}</Badge>
                     </div>
                     <DialogDescription>
-                        Placed at {new Date(selectedOrder.createdAt).toLocaleTimeString('fr-TN', {hour: '2-digit', minute:'2-digit'})}
+                        Placed at {new Date(order.createdAt).toLocaleTimeString('fr-TN', {hour: '2-digit', minute:'2-digit'})}
                     </DialogDescription>
                 </DialogHeader>
                 
                 <div className="py-4 space-y-4">
-                    <div className="border rounded-lg divide-y">
-                        {selectedOrder.items.map((item, idx) => (
+                    <div className="border rounded-lg divide-y max-h-[300px] overflow-y-auto">
+                        {order.items.map((item, idx) => (
                             <div key={idx} className="p-3 flex justify-between items-start">
                                 <div>
                                     <div className="font-bold text-lg">
                                         <span className="text-orange-600 mr-2">{item.qty || 1}x</span>
                                         {item.name}
                                     </div>
-                                    {/* Modifiers List */}
                                     {item.modifiers && item.modifiers.length > 0 && (
                                         <div className="mt-1 space-y-1 pl-6">
                                             {item.modifiers.map((mod, midx) => (
@@ -112,72 +137,66 @@ export default function ManageOrders() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="font-mono font-medium">{item.price?.toFixed(3)} DT</div>
+                                <div className="font-mono font-medium whitespace-nowrap">
+                                    {((item.price || 0) * (item.qty || 1)).toFixed(3)} DT
+                                </div>
                             </div>
                         ))}
                     </div>
                     
                     <div className="flex justify-between items-center text-lg font-bold px-2">
                         <span>Total</span>
-                        <span>{selectedOrder.total?.toFixed(3)} DT</span>
+                        <span>{order.total?.toFixed(3)} DT</span>
                     </div>
                 </div>
 
                 <DialogFooter className="flex-col sm:flex-row gap-2">
-                    {/* Action Buttons */}
                     <div className="flex flex-1 gap-2">
-                        <Button 
-                           variant="outline" 
-                           className="flex-1"
-                           onClick={() => printOrderTicket(selectedOrder)}
-                        >
+                        <Button variant="outline" className="flex-1" onClick={() => printOrderTicket(order)}>
                             <Printer className="mr-2 h-4 w-4" /> Print
                         </Button>
-                         <Button 
+                        <Button 
                             variant="destructive" 
                             className="flex-1"
+                            disabled={deleteOrder.isPending}
                             onClick={() => {
-                                deleteOrder.mutate(selectedOrder._id);
-                                setSelectedOrder(null);
+                                deleteOrder.mutate(order._id, { onSuccess: onClose });
                             }}
                         >
-                            <Trash2 className="h-4 w-4" />
+                            {deleteOrder.isPending ? <Loader2 className="animate-spin h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
                         </Button>
                     </div>
                     
-                    {selectedOrder.status === 'pending' && (
+                    {order.status === 'pending' && (
                         <Button 
                             className="bg-blue-600 hover:bg-blue-700 flex-1"
+                            disabled={updateStatus.isPending}
                             onClick={() => {
-                                updateStatus.mutate({ orderId: selectedOrder._id, status: 'preparing' });
-                                setSelectedOrder(null);
+                                updateStatus.mutate({ orderId: order._id, status: 'preparing' }, { onSuccess: onClose });
                             }}
                         >
-                            Start Cooking <ChefHat className="ml-2 h-4 w-4" />
+                            {updateStatus.isPending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <ChefHat className="mr-2 h-4 w-4" />}
+                            Start Cooking
                         </Button>
                     )}
 
-                    {selectedOrder.status === 'preparing' && (
+                    {order.status === 'preparing' && (
                         <Button 
                             className="bg-green-600 hover:bg-green-700 flex-1"
+                            disabled={updateStatus.isPending}
                             onClick={() => {
-                                updateStatus.mutate({ orderId: selectedOrder._id, status: 'ready' });
-                                setSelectedOrder(null);
+                                updateStatus.mutate({ orderId: order._id, status: 'ready' }, { onSuccess: onClose });
                             }}
                         >
-                            Mark Ready <CheckCircle2 className="ml-2 h-4 w-4" />
+                            {updateStatus.isPending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                            Mark Ready
                         </Button>
                     )}
                 </DialogFooter>
-                </>
-            )}
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+            </DialogContent>
+        </Dialog>
+    );
 }
-
-// --- Sub-Components ---
 
 function OrderGrid({ orders, type, onSelect }) {
     if (orders.length === 0) return (
@@ -234,3 +253,71 @@ function OrderCard({ order, onClick }) {
         </Card>
     )
 }
+
+// --- PRINT UTILITY ---
+export const printOrderTicket = (order) => {
+    const printWindow = window.open('', '', 'height=600,width=400');
+    if (!printWindow) {
+      alert("Please allow popups to print receipts");
+      return;
+    }
+  
+    const itemsHtml = order.items.map(item => `
+      <div class="item">
+        <span class="qty">${item.qty || 1}x</span>
+        <span class="name">${item.name}</span>
+        <span class="price">${((item.price || 0) * (item.qty || 1)).toFixed(3)}</span>
+      </div>
+      ${item.modifiers && item.modifiers.length > 0 ? `
+        <div class="modifiers">
+          ${item.modifiers.map(m => `<div>+ ${m.name}</div>`).join('')}
+        </div>
+      ` : ''}
+    `).join('');
+  
+    const htmlContent = `
+      <html>
+        <head>
+          <title>Order #${order._id.slice(-4)}</title>
+          <style>
+            body { font-family: 'Courier New', monospace; padding: 10px; margin: 0; max-width: 300px; color: #000; }
+            .header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+            h2 { margin: 0; font-size: 18px; text-transform: uppercase; }
+            .meta { font-size: 12px; margin-top: 5px; }
+            .item { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 4px; }
+            .qty { min-width: 25px; }
+            .name { flex-grow: 1; text-align: left; }
+            .modifiers { font-size: 11px; margin-left: 25px; margin-bottom: 8px; font-style: italic; }
+            .footer { border-top: 2px dashed #000; margin-top: 10px; padding-top: 10px; text-align: right; }
+            .total { font-size: 16px; font-weight: bold; }
+            @media print { @page { margin: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>Quisine-IQ</h2>
+            <div class="meta">Table: ${order.table}</div>
+            <div class="meta">Date: ${new Date().toLocaleString('fr-TN')}</div>
+            <div class="meta">Order ID: #${order._id.slice(-4).toUpperCase()}</div>
+          </div>
+          
+          <div class="items">
+            ${itemsHtml}
+          </div>
+  
+          <div class="footer">
+            <div class="total">Total: ${order.total?.toFixed(3)} DT</div>
+          </div>
+        </body>
+      </html>
+    `;
+  
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };

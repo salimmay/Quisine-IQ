@@ -31,7 +31,7 @@ export default function Menu() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["public-menu", shopId],
     queryFn: async () => {
-      const { data } = await api.get(`/auth/menu/${shopId}`); // Adjust route if needed
+      const { data } = await api.get(`/shop/menu/${shopId}`);  // Adjust route if needed
       return data;
     },
     enabled: !!shopId,
@@ -213,27 +213,32 @@ export default function Menu() {
 
       {/* --- FLOATING CART BUTTON --- */}
       <AnimatePresence>
-        {cartCount > 0 && (
-          <motion.div 
-            initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }}
-            className="fixed bottom-6 left-0 right-0 z-40 px-4 flex justify-center"
-          >
-            <Button 
-              size="lg" 
-              className="w-full max-w-md shadow-2xl bg-slate-900 text-white flex justify-between items-center py-7 rounded-2xl border-t border-slate-700"
-              onClick={() => setIsCartOpen(true)}
-            >
-              <div className="flex items-center gap-3">
-                <div className="bg-orange-600 h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm">
-                  {cartCount}
-                </div>
-                <span className="font-semibold">View Order</span>
-              </div>
-              <span className="font-bold text-lg">${cartTotal.toFixed(2)}</span>
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+  {cartCount > 0 && (
+    <motion.div 
+      initial={{ y: 100 }} 
+      animate={{ y: 0 }} 
+      exit={{ y: 100 }}
+      className="fixed bottom-8 left-0 right-0 z-50 px-4 flex justify-center" // Standard Z-50
+    >
+      <Button 
+        size="lg" 
+        className="w-full max-w-md shadow-2xl bg-slate-900 text-white flex justify-between items-center py-8 rounded-2xl cursor-pointer"
+        onClick={() => {
+            console.log("Opening Cart...");
+            setIsCartOpen(true);
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="bg-orange-600 h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm">
+            {cartCount}
+          </div>
+          <span className="font-semibold text-lg">View Order</span>
+        </div>
+        <span className="font-bold text-xl">${cartTotal.toFixed(3)}</span>
+      </Button>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       {/* --- ITEM MODIFIER DIALOG --- */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -302,16 +307,18 @@ export default function Menu() {
       </Dialog>
 
       {/* --- CART SHEET (CHECKOUT) --- */}
-      <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-        <SheetContent className="flex flex-col h-full w-full sm:max-w-md p-0">
-            <div className="p-6 border-b bg-slate-50">
-                <SheetHeader>
-                    <SheetTitle className="text-2xl font-bold flex items-center gap-2">
-                        <ShoppingBag className="text-orange-600" /> Your Order
-                    </SheetTitle>
-                    {tableNumber && <p className="text-sm text-slate-500">Table #{tableNumber}</p>}
-                </SheetHeader>
-            </div>
+     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+  {/* ADD side="bottom" HERE */}
+  <SheetContent side="bottom" className="flex flex-col h-[90vh] w-full p-0 rounded-t-2xl">
+      
+      <div className="p-6 border-b bg-slate-50 rounded-t-2xl">
+          <SheetHeader>
+              <SheetTitle className="text-2xl font-bold flex items-center gap-2">
+                  <ShoppingBag className="text-orange-600" /> Your Order
+              </SheetTitle>
+              {tableNumber && <p className="text-sm text-slate-500">Table #{tableNumber}</p>}
+          </SheetHeader>
+      </div>
             
             <ScrollArea className="flex-1 p-6">
                 {cart.length === 0 ? (
@@ -369,7 +376,7 @@ export default function Menu() {
                 </div>
                 
                 <Button 
-                    className="w-full py-6 text-lg font-bold bg-slate-900 hover:bg-slate-800"
+                    className="w-full py-6 text-lg font-bold bg-orange-600 hover:bg-orange-800"
                     disabled={cart.length === 0 || checkoutMutation.isPending}
                     onClick={() => checkoutMutation.mutate()}
                 >

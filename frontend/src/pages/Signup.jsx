@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import api from "../lib/api"; // Uses your axios interceptor
 import { 
-  User, Mail, Lock, Phone, ArrowRight, Loader2, Eye, EyeOff, ChefHat 
+  User, Mail, Lock, Phone, ArrowRight, Loader2, Eye, EyeOff, ChefHat ,ArrowLeft 
 } from "lucide-react";
 
 // Assets
@@ -76,17 +76,20 @@ function Signup() {
       
       {/* --- Left Side: Form Section --- */}
       <div className="flex w-full flex-col justify-center px-6 py-12 lg:w-1/2 lg:px-20 xl:px-24">
-        
-        {/* Top Header */}
-        <div className="mb-10 flex items-center justify-between">
-           <Link to="/">
-              <img src={logo} alt="Logo" className="h-10 w-auto hover:opacity-80 transition-opacity" />
-           </Link>
-           <Link to="/" className="text-sm font-medium text-slate-500 hover:text-orange-600 transition-colors">
-             Back to Home
-           </Link>
-        </div>
-
+  {/* Top Header */}
+<div className="mb-12 flex items-center justify-between">
+  <Link to="/">
+    <img src={logo} alt="Logo" className="h-10 w-auto" />
+  </Link>
+  
+  <Link 
+    to="/" 
+    className="group flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-500 transition-all hover:bg-slate-100 hover:text-slate-900"
+  >
+    <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+    Back to Home
+  </Link>
+</div>
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}

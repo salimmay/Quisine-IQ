@@ -18,7 +18,7 @@ export default function ManageQr() {
 
   // The base URL for your public menu
   // In production, change this to your actual domain (e.g., https://quisine-iq.com)
-  const baseUrl = `${window.location.origin}/menu/${user?.userId}`;
+  const baseUrl = `http://192.168.1.24:5173/menu/${user?.userId}`;
 
   // Helper: Download single QR
   const downloadQr = (tableNum) => {
@@ -86,7 +86,7 @@ export default function ManageQr() {
                         step={1} 
                         value={[tableCount]}
                         onValueChange={(val) => setTableCount(val[0])}
-                        className="w-full"
+                        className="bg-orange-600 w-full border-orange-600 border-2 rounded-lg"
                     />
                 </div>
                 
