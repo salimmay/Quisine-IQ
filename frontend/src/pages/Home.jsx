@@ -208,7 +208,7 @@ function Home() {
 
           <div className="flex flex-col lg:flex-row items-center gap-12">
              <div className="w-full lg:w-1/2">
-                <img src={people} alt="Team" className="w-full object-contain" />
+                <img src={people} alt="Team" />
              </div>
              <div className="w-full lg:w-1/2 space-y-6">
                  <h3 className="text-2xl font-bold text-slate-900">Why choose us?</h3>
